@@ -6,5 +6,5 @@ Logistic regression (C=1.0) on engineered features — log amount, night-time fl
 
 - 5-fold CV accuracy: 75.7%, AUC: 0.77 (always-legit baseline: 71.2%)
 - Fraud rate in training data: 28.8%
-- Live demo: https://fraudguard.vercel.app (runs fully in the browser — no backend)
+- Live demo: https://fraudguard-alpha.vercel.app (runs fully in the browser — no backend)
 - `train.py` trains the model and writes `model.json`; `index.html` applies the same weights in JavaScript.
