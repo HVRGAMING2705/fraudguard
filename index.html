@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FraudGuard — Card Fraud Detector | AI/ML Project</title>
+<meta name="description" content="FraudGuard scores card transactions for fraud risk from amount, hour, distance from home, recent transaction count, foreign flag and card-present flag, using a logistic regression model trained on 1,000 synthetic transactions.">
+<link rel="canonical" href="https://fraudguard.vercel.app/">
+<meta property="og:title" content="FraudGuard — Card Fraud Detector">
+<meta property="og:description" content="Enter a transaction and instantly get a fraud-risk score, with a real trained ML model running in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://fraudguard.vercel.app/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="FraudGuard — Card Fraud Detector">
+<meta name="twitter:description" content="Logistic regression fraud detector. Try the live demo in your browser.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"FraudGuard","applicationCategory":"FinanceApplication","description":"Card fraud risk detector using logistic regression.","url":"https://fraudguard.vercel.app/"}</script>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff;max-width:720px;margin:0 auto;padding:24px;line-height:1.5}
+h1{font-size:2em} label{display:block;margin:12px 0 4px;font-weight:bold}
+input,select{width:100%;padding:10px;font-size:16px;border:1px solid #000;border-radius:4px;box-sizing:border-box}
+button{margin-top:20px;padding:12px 24px;font-size:17px;background:#000;color:#fff;border:none;border-radius:4px;cursor:pointer}
+#result{margin-top:24px;padding:20px;border:2px solid #000;border-radius:8px;display:none}
+#result b{font-size:2em}
+.note{color:#333;font-size:.95em} code{background:#f2f2f2;padding:2px 5px}
+</style>
+</head>
+<body>
+<h1>&#128737; FraudGuard — Card Fraud Detector</h1>
+<p class="note">A 2nd-year B.Tech AI/ML project by Vikranth Reddy. A logistic regression model trained on 1,000 synthetic card transactions scores fraud risk from amount, hour, distance from home, recent transactions, foreign flag and card-present flag. 5-fold CV: <b>accuracy = 75.7%</b>, AUC = 0.77 vs an always-legit baseline of 71.2%.</p>
+<label>Transaction amount (&#8377;)</label><input id="amount" type="number" value="2500" min="50" max="200000">
+<label>Hour of transaction (0–23)</label><input id="hour" type="number" value="14" min="0" max="23">
+<label>Distance from home (km)</label><input id="dist" type="number" value="5" min="0" max="3000">
+<label>Transactions in the last hour</label><input id="txhr" type="number" value="1" min="0" max="20">
+<label>Foreign transaction?</label><select id="foreign"><option value="0" selected>No</option><option value="1">Yes</option></select>
+<label>Card present at transaction?</label><select id="present"><option value="1" selected>Yes</option><option value="0">No</option></select>
+<button onclick="predict()">Check Fraud Risk</button>
+<div id="result"></div>
+<p class="note">How it works: the inputs are converted to model features (log amount, night-time flag, log distance, capped recent-transaction count, foreign and card-present flags), standardised with the training means and standard deviations, then multiplied by the model&apos;s learned coefficients and passed through a sigmoid. The exact same weights run in this page and in the Python training script (<code>train.py</code>), so the browser result matches the trained model.</p>
+<p class="note">Try a sample: a normal daytime purchase — &#8377;2,500 at 2 PM, 5 km from home, card present &rarr; about 15.4% fraud risk. A risky one — &#8377;85,000 at 3 AM, 1,200 km away, foreign, card not present &rarr; about 99.9% fraud risk.</p>
+<p><a href="https://github.com/HVRGAMING2705/fraudguard">View source on GitHub</a></p>
+<script>
+const MEANS = [7.471168884834695, 0.262, 2.604525962481173, 1.152, 0.102, 0.86];
+const STDS = [0.9885029323924535, 0.43972263985381016, 1.020662767319146, 1.0783765576087048, 0.3026483107502816, 0.3469870314579466];
+const COEF = [0.8042822406484345, 0.39635670118793176, 0.33345077906173737, 0.45262527280221315, 0.34739125279694166, -0.41749311626988994];
+const INTERCEPT = -1.1383127340422003;
+function predict(){
+  const amount = parseFloat(document.getElementById("amount").value);
+  const hour = parseFloat(document.getElementById("hour").value);
+  const dist = parseFloat(document.getElementById("dist").value);
+  const txhr = parseFloat(document.getElementById("txhr").value);
+  const foreign = parseFloat(document.getElementById("foreign").value);
+  const present = parseFloat(document.getElementById("present").value);
+  const night = (hour < 5 || hour > 22) ? 1 : 0;
+  const v = [Math.log(amount), night, Math.log1p(dist), Math.min(txhr, 5), foreign, present];
+  let z = INTERCEPT;
+  for (let j = 0; j < 6; j++) z += ((v[j]-MEANS[j])/STDS[j]) * COEF[j];
+  const p = 1/(1+Math.exp(-z)) * 100;
+  const verdict = p >= 50 ? "&#9888; HIGH RISK — flag this transaction for review." : (p >= 25 ? "&#9888; MEDIUM RISK — verify before approving." : "&#9989; LOW RISK — looks like a normal transaction.");
+  const el = document.getElementById("result");
+  el.style.display = "block";
+  el.innerHTML = "<b>" + p.toFixed(2) + "% fraud risk</b><br>" + verdict + "<br><span class=note>This is a classroom demo on synthetic data, not a bank fraud system.</span>";
+}
+</script>
+</body>
+</html>
