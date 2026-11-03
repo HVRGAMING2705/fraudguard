@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://fraudguard.vercel.app/sitemap.xml
+Sitemap: https://fraudguard-alpha.vercel.app/sitemap.xml
